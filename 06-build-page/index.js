@@ -4,61 +4,30 @@ const fs = require('fs');
 const template = fs.createReadStream(path.join(__dirname, 'template.html'), 'utf-8');
 let newTemplate = '';
 
-// function replaceContent(source, destination) {
-//   const componentsFile = fs.createReadStream(path.join(__dirname, 'components', `${source.name}`), 'utf-8');
-//   let contentComponentsFile = '';
-//   console.log(8);
-
-//   componentsFile.on('data', chunk => {
-//     console.log(9);
-//     contentComponentsFile += chunk;
-//     destination = destination.replace(`{{${source.name.slice(0, source.name.indexOf('.'))}}}`, `${contentComponentsFile}`);
-//   });
-// }
-
 fs.mkdir(path.join(__dirname, 'project-dist'), { recursive: true }, error => {
   if (error) console.log(error);
-  // console.log(1);
   const commonFileHtml = fs.createWriteStream(path.join(__dirname, 'project-dist', 'index.html'));
 
   template.on('data', chunk => {
-    // console.log(2);
     newTemplate += chunk;
-    // console.log(3);
-    // console.log(4);
     fs.readdir(path.join(__dirname, 'components'), { withFileTypes: true }, (error, files) => {
       if (error) console.log(error);
-      // console.log(5);
-      files.forEach(file => {
-        if (file.isFile()) {
-          if (path.extname(file.name) === '.html') {
-            // console.log(6);
-            // console.log(newTemplate);
-            if (newTemplate.includes(`{{${file.name.slice(0, file.name.indexOf('.'))}}}`)) {
-              // console.log(7);
-              // console.log(newTemplate);
-              // fs.readFile(path.join(__dirname, 'components', `${file.name}`), 'utf-8', (error, contentComponentsFile) => {
-              //   if (error) console.log(error);
-              //   console.log(8);
-              //   newTemplate = newTemplate.replace(`{{${file.name.slice(0, file.name.indexOf('.'))}}}`, `${contentComponentsFile}`);
-              //   console.log(9);
-              // });
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].isFile()) {
+          if (path.extname(files[i].name) === '.html') {
+            if (newTemplate.includes(`{{${files[i].name.slice(0, files[i].name.indexOf('.'))}}}`)) {
 
-              const componentsFile = fs.createReadStream(path.join(__dirname, 'components', `${file.name}`), 'utf-8');
-              let contentComponentsFile = '';
-              // console.log(8);
-
+              const componentsFile = fs.createReadStream(path.join(__dirname, 'components', `${files[i].name}`), 'utf-8');
               componentsFile.on('data', chunk => {
-                // console.log(9);
-                contentComponentsFile += chunk;
-                newTemplate = newTemplate.replace(`{{${file.name.slice(0, file.name.indexOf('.'))}}}`, `${contentComponentsFile}`);
+                newTemplate = newTemplate.replace(`{{${files[i].name.slice(0, files[i].name.indexOf('.'))}}}`, `${chunk}`);
+                if (i === files.length - 1) {
+                  commonFileHtml.write(newTemplate);
+                }
               });
-              // console.log(10);
             }
           }
         }
-      });
-      commonFileHtml.write(newTemplate);
+      }
     });
   });
 
